@@ -49,7 +49,6 @@ export default class App {
         let mat = new RawShaderMaterial({
             uniforms : {
                 tMain : {value : this.camTexture},
-                // uRadius : {value: },
                 uResolution : {value : new Vector2( this.camTexture.image.width, this.camTexture.image.height )}
             },
             defines: {
@@ -62,7 +61,6 @@ export default class App {
         let mesh = new Mesh(geo, mat);
         mesh.scale.set( this.camTexture.image.width, this.camTexture.image.height );
 
-        // this.gui.add(mat.defines, 'RAD', 0, 10).step(1).onChange(this._onChange.bind(this))
         return mesh;
     }
 
