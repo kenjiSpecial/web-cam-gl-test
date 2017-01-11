@@ -13,7 +13,6 @@ const glslify = require('glslify');
 const babelify = require('babelify').configure({
   presets: ['es2015']
 });
-const rollupify = require('rollupify');
 
 const entry = './src/js/index.js';
 const outfile = 'bundle.js';
@@ -41,7 +40,7 @@ gulp.task('watch', function(cb) {
 
 //the distribution bundle task
 gulp.task('bundle', function() {
-  var bundler = browserify(entry, { transform: [babelify, glslify] });
+  var bundler = browserify(entry, { transform: [babelify, glslify] }).bundle();
 
   if(argv.public){
        bundler

@@ -30,9 +30,6 @@
     "gulp-uglify": "*",
     "minimist": "*",
     "node-reset-scss": "*",
-    "rollup-plugin-babel": "^2.7.1",
-    "rollup-plugin-node-resolve": "*",
-    "rollupify": "^0.3.7",
     "vinyl-source-stream": "*"
   },
   "scripts": {

@@ -1,7 +1,6 @@
 'use strict';
 
-// import App from './apps/App';
-import App from './apps/OrthoApp';
+import App from './apps/App';
 
 let app;
 
@@ -23,10 +22,7 @@ function start(){
     app.animateIn();
 }
 
-
 function onDocumentMouseMove(event){
-    // event.preventDefault();
-
     let mouseX = ( event.clientX / window.innerWidth ) * 2 - 1;
     let mouseY = -( event.clientY / window.innerHeight ) * 2 + 1;
 

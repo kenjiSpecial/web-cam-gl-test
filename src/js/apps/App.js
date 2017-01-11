@@ -1,24 +1,27 @@
 'use strict';
 
-const THREE = require('three');
-import  {PerspectiveCamera, Scene, WebGLRenderer, BoxGeometry, Clock, ShaderMaterial, MeshBasicMaterial, Mesh} from 'three';
-const OrbitControls = require('three-orbit-controls')(THREE);
+import  { Texture, Vector2, RawShaderMaterial, OrthographicCamera, Scene, WebGLRenderer, PlaneGeometry, Clock, ShaderMaterial, Mesh, MeshBasicMaterial} from 'three';
+import CamTexture from "../lib/webcam"
+
 
 const dat = require('dat.gui/build/dat.gui.js');
 const TweenMax = require('gsap');
 const glslify = require('glslify');
 const Stats = require('stats.js');
+const THREE = require('three');
+
+const imageSrcs = [
+    'app.jpg'
+];
+let loadedCnt = 0, texture;
 
 export default class App {
     constructor(params){
         this.params = params || {};
-        this.camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 10000);
-        this.camera.position.z = 1000;
+        this.camera = new OrthographicCamera( -window.innerWidth/2, window.innerWidth/2, window.innerHeight/2, -window.innerHeight/2, 0, 10000);
 
         this.scene = new Scene();
 
-        this.mesh = this.createMesh();
-        this.scene.add(this.mesh);
 
         this.renderer = new WebGLRenderer({
             antialias: true
@@ -32,7 +35,6 @@ export default class App {
         }
 
         this.clock = new Clock();
-        this.control = new OrbitControls(this.camera);
 
         this.resize();
     }
@@ -42,27 +44,43 @@ export default class App {
     }
     
     createMesh(){
-        let geometry = new BoxGeometry(200, 200, 200);
-        let shaderMaterial = new ShaderMaterial({
-            vertexShader: glslify('../shaders/shader.vert'),
-            fragmentShader: glslify('../shaders/shader.frag')
+        let geo = new PlaneGeometry(1, 1);
+
+        let mat = new RawShaderMaterial({
+            uniforms : {
+                tMain : {value : this.camTexture},
+                // uRadius : {value: },
+                uResolution : {value : new Vector2( this.camTexture.image.width, this.camTexture.image.height )}
+            },
+            defines: {
+                RAD: 5,
+            },
+            vertexShader : glslify('../shaders/shader.vert'),
+            fragmentShader : glslify('../shaders/shader.frag')
         });
-        // let mat = new MeshBasicMaterial({ color : 0xff0000})
-        let mesh = new Mesh(geometry, shaderMaterial);
+
+        let mesh = new Mesh(geo, mat);
+        mesh.scale.set( this.camTexture.image.width, this.camTexture.image.height );
+
+        // this.gui.add(mat.defines, 'RAD', 0, 10).step(1).onChange(this._onChange.bind(this))
         return mesh;
     }
 
     animateIn(){
+        this.camTexture = new CamTexture({width: 800, height: 600});
+        this._onCamReady = this._onCamReady.bind(this);
+        this.camTexture.eventDispatcher.addEventListener("textuer:ready", this._onCamReady.bind(this));
+        // this.camTexture.start();
+    }
+    _onCamReady(){
+        this.camTexture.eventDispatcher.removeEventListener("textuer:ready", this._onCamReady);
+        this.mesh = this.createMesh();
+        this.scene.add(this.mesh);
+
         TweenMax.ticker.addEventListener('tick', this.loop, this);
     }
-
     loop(){
-        // let delta = this.clock.getDelta();
-
-        this.mesh.rotation.x += 0.01;
-        this.mesh.rotation.y += 0.02;
-
-
+        this.camTexture.updateTexture();
         this.renderer.render(this.scene, this.camera);
         if(this.stats) this.stats.update();
 
@@ -92,8 +110,12 @@ export default class App {
     }
 
     resize(){
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.left   = -window.innerWidth/2;
+        this.camera.right  = window.innerWidth/2;
+        this.camera.top    =  window.innerHeight/2;
+        this.camera.bottom = -window.innerHeight/2;
         this.camera.updateProjectionMatrix();
+
 
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
