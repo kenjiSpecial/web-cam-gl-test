@@ -18,14 +18,16 @@ let loadedCnt = 0, texture;
 export default class App {
     constructor(params){
         this.params = params || {};
-        this.camera = new OrthographicCamera( -window.innerWidth/2, window.innerWidth/2, window.innerHeight/2, -window.innerHeight/2, 0, 10000);
+        this.camera = new OrthographicCamera( -window.innerWidth/2, window.innerWidth/2, window.innerHeight/2, -window.innerHeight/2, 0.1, 1000);
 
         this.scene = new Scene();
+        this.scene.add(this.camera)
 
 
         this.renderer = new WebGLRenderer({
             antialias: true
         });
+        this.renderer.setClearColor(0x000);
         this.dom = this.renderer.domElement;
 
         if(this.params.isDebug){
@@ -44,7 +46,7 @@ export default class App {
     }
     
     createMesh(){
-        let geo = new PlaneGeometry(1, 1);
+        let geo = new THREE.PlaneBufferGeometry(1, 1);
 
         let mat = new RawShaderMaterial({
             uniforms : {
@@ -55,11 +57,12 @@ export default class App {
                 RAD: 5,
             },
             vertexShader : glslify('../shaders/shader.vert'),
-            fragmentShader : glslify('../shaders/shader.frag')
+            fragmentShader : glslify('../shaders/shader.frag'),
+            side : THREE.DoubleSide
         });
 
         let mesh = new Mesh(geo, mat);
-        mesh.scale.set( this.camTexture.image.width, this.camTexture.image.height );
+        mesh.scale.set( this.camTexture.image.width, this.camTexture.image.height, 1 );
 
         return mesh;
     }
@@ -68,12 +71,12 @@ export default class App {
         this.camTexture = new CamTexture({width: 800, height: 600});
         this._onCamReady = this._onCamReady.bind(this);
         this.camTexture.eventDispatcher.addEventListener("textuer:ready", this._onCamReady.bind(this));
-        // this.camTexture.start();
     }
     _onCamReady(){
         this.camTexture.eventDispatcher.removeEventListener("textuer:ready", this._onCamReady);
         this.mesh = this.createMesh();
         this.scene.add(this.mesh);
+        this.mesh.position.z = -10;
 
         TweenMax.ticker.addEventListener('tick', this.loop, this);
     }
